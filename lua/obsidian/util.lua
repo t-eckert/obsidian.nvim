@@ -513,6 +513,7 @@ util.toggle_checkbox = function(opts, line_num)
   local checkboxes = opts or { " ", "x" }
 
   if not string.match(line, checkbox_pattern) then
+    -- Add an empty checkbox if one is not found.
     local unordered_list_pattern = "^(%s*)[-*+] (.*)"
     if string.match(line, unordered_list_pattern) then
       line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")
@@ -529,6 +530,22 @@ util.toggle_checkbox = function(opts, line_num)
         break
       end
     end
+  end
+  -- 0-indexed
+  vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
+end
+
+---Set the value of a checkbox to a given check_char
+util.set_checkbox = function(check_char, line_num)
+  -- Allow line_num to be optional, defaulting to the current line if not provided
+  line_num = line_num or unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_buf_get_lines(0, line_num - 1, line_num, false)[1]
+
+  local checkbox_pattern = "^%s*- %[.] "
+
+  if string.match(line, checkbox_pattern) then
+    -- Only set the check_char if the line contains the checkbox pattern.
+    line = util.string_replace(line, "- [" .. check_char .. "]", "- [" .. check_char .. "]", 1)
   end
   -- 0-indexed
   vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
