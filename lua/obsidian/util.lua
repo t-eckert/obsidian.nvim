@@ -541,14 +541,17 @@ util.set_checkbox = function(check_char, line_num)
   line_num = line_num or unpack(vim.api.nvim_win_get_cursor(0))
   local line = vim.api.nvim_buf_get_lines(0, line_num - 1, line_num, false)[1]
 
-  local checkbox_pattern = "^%s*- %[.] "
+  local checkbox_pattern = "^(%s*)- %[.%] "
 
-  if string.match(line, checkbox_pattern) then
-    -- Only set the check_char if the line contains the checkbox pattern.
-    line = util.string_replace(line, "- [" .. check_char .. "]", "- [" .. check_char .. "]", 1)
+  local indent, rest = string.match(line, checkbox_pattern .. "(.*)")
+
+  if indent and rest then
+    -- Rebuild the line with the new check_char
+    line = indent .. "- [" .. check_char .. "] " .. rest
+
+    -- Update the line in the buffer (0-indexed)
+    vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
   end
-  -- 0-indexed
-  vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
 end
 
 ---Determines if the given date is a working day (not weekend)
